@@ -4,7 +4,9 @@ import game2048rendering.Board;
 import game2048rendering.Side;
 import game2048rendering.Tile;
 
+import java.util.ArrayList;
 import java.util.Formatter;
+import java.util.List;
 
 
 /** The state of a game of 2048.
@@ -15,6 +17,8 @@ public class Model {
     private final Board board;
     /** Current score. */
     private int score;
+
+    private boolean maxTileExists = false;
 
     /* Coordinate System: column x, row y of the board (where x = 0,
      * y = 0 is the lower-left corner of the board) will correspond
@@ -56,6 +60,10 @@ public class Model {
         return score;
     }
 
+    private void setMaxTileExists(boolean exists) {
+        this.maxTileExists = exists;
+    }
+
 
     /** Clear the board to empty and reset the score. */
     public void clear() {
@@ -85,6 +93,19 @@ public class Model {
      * */
     public boolean emptySpaceExists() {
         // TODO: Task 2. Fill in this function.
+        for (int i = 0; i < this.size(); i++) {
+            for (int j = 0; j < this.size(); j++) {
+                Tile currentTile = this.tile(i, j);
+                try {
+                    int tileValue = currentTile.value();
+                    if (tileValue == MAX_PIECE) {
+                        this.setMaxTileExists(true);
+                    }
+                } catch(NullPointerException e) {
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -95,6 +116,22 @@ public class Model {
      */
     public boolean maxTileExists() {
         // TODO: Task 3. Fill in this function.
+        if (this.maxTileExists)
+            return true;
+        for (int i = 0; i < this.size(); i++) {
+            for (int j = 0; j < this.size(); j++) {
+                Tile currentTile = this.tile(i, j);
+                try {
+                    int tileValue = currentTile.value();
+                    if (tileValue == MAX_PIECE) {
+                        this.setMaxTileExists(true);
+                        return true;
+                    }
+                } catch(NullPointerException e) {
+                    // do nothing
+                }
+            }
+        }
         return false;
     }
 
@@ -106,7 +143,43 @@ public class Model {
      */
     public boolean atLeastOneMoveExists() {
         // TODO: Fill in this function.
+        if (emptySpaceExists())
+            return true;
+        List<Tile> adjacentTiles;
+        for (int i = 0; i < this.size(); i++) {
+            for (int j = 0; j < this.size(); j++) {
+                int currentTileVal = this.tile(i, j).value();
+                adjacentTiles = this.getAdjacentTiles(i, j);
+                for (Tile tile : adjacentTiles) {
+                    if (tile.value() == currentTileVal)
+                        return true;
+                }
+            }
+        }
         return false;
+    }
+
+    /**
+     * Given a set of x, y coordinates of a tile, return the list of tiles adjacent
+     * @param tileX
+     * @param tileY
+     * @return
+     */
+    private List<Tile> getAdjacentTiles(int tileX, int tileY) {
+        List<Tile> adjacentTiles = new ArrayList<Tile>();
+        int leftTileX = tileX - 1;
+        if (leftTileX >= 0)
+            adjacentTiles.add(this.tile(leftTileX, tileY));
+        int rightTileX = tileX + 1;
+        if (rightTileX < this.size())
+            adjacentTiles.add(this.tile(rightTileX, tileY));
+        int topTileY = tileY -1;
+        if (topTileY >= 0)
+            adjacentTiles.add(this.tile(tileX, topTileY));
+        int bottomTileY = tileY + 1;
+        if (bottomTileY < this.size())
+            adjacentTiles.add(this.tile(tileX, bottomTileY));
+        return adjacentTiles;
     }
 
     /**
